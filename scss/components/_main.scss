@@ -1,0 +1,36 @@
+.main-contenedor {
+    padding: 0;
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    div {
+        width: 600px;
+        height: auto;
+        background-color: rgba(190, 190, 190, 0.486);
+        display: grid;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+
+        h1 {
+            margin-top: 0;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+          
+        canvas {
+            margin-top: 5px;
+            display: none;
+            border: 2px solid #000000;
+            justify-content: center;
+            align-items: center;
+        }
+    }
+
+}   
