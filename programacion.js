@@ -1,5 +1,6 @@
 /*******************************************
- * 1) Clases y Variables Globales
+ * 1) Clases y Variables Globales 
+ * 
  *******************************************/
 class Player {
   constructor(nombre, clase) {
@@ -404,7 +405,7 @@ function agregarKitbienvenida() {
     player = jugadorCargado;
     return;
   }
-  
+
   // Bandera para marcar que el kit ya se entregó
   jugadorCargado.kitEntregado = true;
 
