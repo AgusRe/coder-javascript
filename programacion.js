@@ -400,14 +400,11 @@ function agregarKitbienvenida() {
 
   // Verificamos si ya se entregó el kit para no volver a hacerlo
   if (jugadorCargado.kitEntregado) {
-    console.log("El kit de bienvenida ya fue entregado. No se agregan más items.");
     // Actualizamos la variable global 'player' y salimos
     player = jugadorCargado;
     return;
   }
-
-  console.log("Entregando kit de bienvenida a:", jugadorCargado);
-
+  
   // Bandera para marcar que el kit ya se entregó
   jugadorCargado.kitEntregado = true;
 
