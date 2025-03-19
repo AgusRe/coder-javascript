@@ -667,7 +667,7 @@ function agregarKitbienvenida() {
 function textoMonstruos() {
   actualizarHistoria("Como decidiste cazar monstruos, el gremio te dio un kit de bienvenida.\n");
   agregarKitbienvenida();
-
+  actualizarStats();
   mostrarOpciones([
     { label: "Mostrar Inventario", handler: () => mostrarInventario(() => textoMonstruos()) },
     { label: "Ir a la caza de monstruos", handler: () => cazarMonstruos() }
