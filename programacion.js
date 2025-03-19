@@ -20,7 +20,7 @@ class Player {
     this.puntaje = 0;
     this.inventario = [];
 
-    switch(clase) {
+    switch (clase) {
       case "Mago":
         this.pv = 100;
         break;
@@ -36,7 +36,6 @@ class Player {
       default:
         this.pv = 80;
     }
-
     this.maxPv = this.pv + 5;
   }
 
@@ -62,7 +61,7 @@ class Enemigo {
   /**
    * Crea una instancia de Enemigo.
    * @param {string} nombre - Nombre del enemigo.
-   * @param {string} tipo - Tipo de enemigo.
+   * @param {string} tipo - Tipo del enemigo.
    * @param {string} clase - Clase o categoría.
    * @param {number} dificultad - Dificultad del enemigo.
    * @param {Array} habilidades - Habilidades del enemigo.
@@ -91,6 +90,7 @@ let enemigos = [];
 // Referencias al DOM
 const storyText = document.getElementById("story-text");
 const choicesDiv = document.getElementById("choices");
+const statsDiv = document.getElementById("stats");
 
 /**
  * Actualiza el texto de la historia en el DOM.
@@ -98,6 +98,33 @@ const choicesDiv = document.getElementById("choices");
  */
 function actualizarHistoria(text) {
   storyText.innerText = text;
+}
+
+/**
+ * Actualiza la pestaña de estadísticas con los datos actuales del jugador,
+ * incluyendo el inventario en forma de lista vertical.
+ */
+function actualizarStats() {
+  if (player && statsDiv) {
+    // Acá se crea una lista de elementos <li> con el inventario del jugador
+    let inventarioHTML = "<ul>";
+    if (player.inventario.length > 0) {
+      player.inventario.forEach(item => {
+        inventarioHTML += `<li>${item.nombre} (x${item.cantidad})</li>`;
+      });
+    } else {
+      inventarioHTML += "<li>Vacío</li>";
+    }
+    inventarioHTML += "</ul>";
+
+    statsDiv.innerHTML = `
+      <strong>${player.nombre}</strong><br>
+      PV: ${player.pv} / ${player.maxPv}<br>
+      Clase: ${player.clase}<br>
+      Puntaje: ${player.puntaje}<br>
+      <strong>Inventario:</strong> ${inventarioHTML}
+    `;
+  }
 }
 
 /**
@@ -130,12 +157,15 @@ function mostrarOpciones(choices, fullWidth = false) {
 }
 
 /**
- * Guarda datos en LocalStorage.
+ * Guarda datos en LocalStorage y actualiza las estadísticas.
  * @param {string} key - Clave para almacenar el dato.
  * @param {any} data - Datos a almacenar.
  */
 function guardarDatos(key, data) {
   localStorage.setItem(key, JSON.stringify(data));
+  if (key === "player") {
+    actualizarStats();
+  }
 }
 
 /**
@@ -185,13 +215,11 @@ function usarHabilidad(habilidadIndex, enemigo) {
           const dmg = 15 + enteroRandom(0, 5);
           enemigo.pv -= dmg;
           actualizarHistoria(`Lanzas un Rayo Congelante causando ${dmg} de daño y congelas al enemigo.`);
-          // Aquí podrías implementar una bandera para que el enemigo pierda un turno
           break;
         }
         case 3: {
           // Teletransporte
           actualizarHistoria(`Te teletransportas, esquivando el próximo ataque enemigo.`);
-          // Podrías establecer una bandera para evitar el siguiente ataque.
           break;
         }
       }
@@ -252,7 +280,6 @@ function usarHabilidad(habilidadIndex, enemigo) {
         case 3: {
           // Esquivar
           actualizarHistoria(`Te preparas para esquivar, aumentando tu probabilidad de evadir el próximo ataque.`);
-          // Aquí podrías establecer una bandera para esquivar.
           break;
         }
       }
@@ -269,13 +296,11 @@ function usarHabilidad(habilidadIndex, enemigo) {
         case 1: {
           // Esquivar
           actualizarHistoria(`Activas tu habilidad de Esquivar, incrementando tu evasión.`);
-          // Aquí podrías establecer una bandera para esquivar el siguiente ataque.
           break;
         }
         case 2: {
           // Robo
           actualizarHistoria(`Intentas robar al enemigo. Si tienes éxito, podrías obtener un objeto.`);
-          // Aquí puedes implementar una probabilidad de robo y agregar lógica para añadir un item al inventario.
           break;
         }
         case 3: {
@@ -396,11 +421,10 @@ function peleaPorTurnos(enemigo, volverHandler) {
           actualizarHistoria(
             `¡${enemigo.nombre} te ha derrotado! Tus PV han llegado a 0.\nFin de la aventura.`
           );
-          mostrarOpciones([]);
+          mostrarOpciones([{ label: "Reiniciar", handler: reiniciarJuego }]);
           return;
         }
 
-        // Se repite el turno de combate
         setTimeout(() => {
           peleaPorTurnos(enemigo, volverHandler);
         }, 0);
@@ -439,7 +463,7 @@ function peleaPorTurnos(enemigo, volverHandler) {
           actualizarHistoria(
             `Mientras tomabas la poción, el ${enemigo.nombre} te golpeó y te dejó en 0 PV.\nFin de la aventura.`
           );
-          mostrarOpciones([]);
+          mostrarOpciones([{ label: "Reiniciar", handler: reiniciarJuego }]);
           return;
         }
 
@@ -451,9 +475,7 @@ function peleaPorTurnos(enemigo, volverHandler) {
     {
       label: "Usar habilidad",
       handler: () => {
-        // Se muestra el menú de habilidades según la clase del jugador
         mostrarHabilidades(enemigo, () => {
-          // Verificar si el enemigo fue derrotado por la habilidad
           if (enemigo.pv <= 0) {
             actualizarHistoria(
               `¡Venciste a ${enemigo.nombre}!\nGanás algo de experiencia...`
@@ -464,7 +486,6 @@ function peleaPorTurnos(enemigo, volverHandler) {
             mostrarOpciones([{ label: "Continuar", handler: volverHandler }]);
             return;
           }
-          // Si el enemigo sigue vivo, ataca
           const dmgEnemigo = 5 + enteroRandom(0, enemigo.dificultad * 2);
           player.pv -= dmgEnemigo;
           actualizarHistoria(
@@ -475,7 +496,7 @@ function peleaPorTurnos(enemigo, volverHandler) {
             actualizarHistoria(
               `El ataque del ${enemigo.nombre} fue demasiado fuerte y quedaste en 0 PV.\nFin de la aventura.`
             );
-            mostrarOpciones([]);
+            mostrarOpciones([{ label: "Reiniciar", handler: reiniciarJuego }]);
             return;
           }
           setTimeout(() => {
@@ -581,11 +602,19 @@ function mostrarInventario(volverHandler = null) {
   }
 }
 
-
-
 /*******************************************
  * 5) Historia y Lógica del Juego
  *******************************************/
+
+/**
+ * Reinicia el juego borrando el progreso guardado y volviendo al inicio.
+ */
+function reiniciarJuego() {
+  localStorage.removeItem("player");
+  player = null;
+  enemigos = [];
+  historia();
+}
 
 /**
  * Agrega el kit de bienvenida al jugador.
@@ -658,7 +687,7 @@ function cazarMonstruos() {
   const enemigoActual = enemigos[0];
   if (!enemigoActual) {
     actualizarHistoria("No hay enemigos disponibles. ¡Has acabado con todos!");
-    mostrarOpciones([]);
+    mostrarOpciones([{ label: "Reiniciar", handler: reiniciarJuego }]);
     return;
   }
 
@@ -754,7 +783,7 @@ function irAlGremio() {
         actualizarHistoria("Decidís volver a la aldea por el momento.");
         mostrarOpciones([
           { label: "Volver", handler: () => siguientePasoAldea() },
-          { label: "Hablar con al recepcionista de vuelta.", handler: () => irAlGremio() }
+          { label: "Hablar con la recepcionista de vuelta.", handler: () => irAlGremio() }
         ]);
       }
     }
@@ -793,7 +822,7 @@ function siguientePasoAldea() {
           `Te alejás de la aldea y das por terminada tu aventura.\n` +
           `Hasta acá llega la historia por el momento. Gracias por haber jugado ${player.nombre}!`
         );
-        mostrarOpciones([]);
+        mostrarOpciones([{ label: "Reiniciar", handler: reiniciarJuego }]);
       }
     }
   ]);
@@ -868,7 +897,7 @@ function loreAldea() {
         actualizarHistoria("Aldeano:\n¡Ah bueno! Entonces no me hagas perder más el tiempo. Andate de acá.");
         player.puntaje -= 3;
         guardarDatos("player", player);
-        mostrarOpciones([]);
+        mostrarOpciones([{ label: "Reiniciar", handler: reiniciarJuego }]);
       }
     }
   ]);
@@ -956,29 +985,45 @@ function elegirClase(nombreIngresado) {
  * Función principal que inicia la historia.
  */
 function historia() {
-  actualizarHistoria(
-    "Sos un aventurero que despertó en una pequeña aldea en las afueras del reino de Aurora.\n" +
-    "Nadie sabe de dónde venís ni nada de tu pasado.\n" +
-    "Llevás una bolsa con algunas monedas y un mapa que señala un castillo en ruinas.\n\n" +
-    "¿Deseás comenzar la historia?"
-  );
+  // Al cargar la página se revisa si existe un jugador guardado para continuar la partida
+  const jugadorGuardado = cargarDatos("player");
+  if (jugadorGuardado) {
+    player = jugadorGuardado;
+    actualizarStats();
+    actualizarHistoria(`Bienvenido de nuevo, ${player.nombre}.\nContinuás tu aventura...`);
+    setTimeout(() => textoMonstruos(), 2000);
+  } else {
+    actualizarHistoria(
+      "Sos un aventurero que despertó en una pequeña aldea en las afueras del reino de Aurora.\n" +
+      "Nadie sabe de dónde venís ni nada de tu pasado.\n" +
+      "Llevás una bolsa con algunas monedas y un mapa que señala un castillo en ruinas.\n\n" +
+      "¿Deseás comenzar la historia?"
+    );
 
-  mostrarOpciones([
-    { label: "Aceptar", handler: () => nombreYClase() },
-    { label: "Playground", handler: () => {
-        mostrarOpciones([]);
-        actualizarHistoria(
-          "Decidiste ir a cazar monstruos en las afueras del pueblo...\n\n" +
-          "⚔️ Tu clase será: Mago\n" +
-          "📝 Tu nombre será: Playground"
-        );
-        player = new Player("Playground", "Mago");
-        guardarDatos("player", player);
-        setTimeout(() => textoMonstruos(), 2000);
+    mostrarOpciones([
+      { label: "Aceptar", handler: () => nombreYClase() },
+      { label: "Playground", handler: () => {
+          mostrarOpciones([]);
+          actualizarHistoria(
+            "Decidiste ir a cazar monstruos en las afueras del pueblo...\n\n" +
+            "⚔️ Tu clase será: Mago\n" +
+            "📝 Tu nombre será: Playground"
+          );
+          player = new Player("Playground", "Mago");
+          guardarDatos("player", player);
+          setTimeout(() => textoMonstruos(), 2000);
+        }
       }
-    }
-  ]);
+    ]);
+  }
 }
+
+// Guarda automáticamente el progreso cuando se cierra la pestaña
+window.addEventListener("beforeunload", () => {
+  if (player) {
+    guardarDatos("player", player);
+  }
+});
 
 // Inicia la historia
 historia();
