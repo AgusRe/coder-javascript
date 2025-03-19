@@ -154,8 +154,185 @@ function cargarDatos(key) {
 }
 
 /*******************************************
- * 3) Funciones de Creación de Enemigos
+ * 3) Funciones útiles y de Creación de Enemigos
  *******************************************/
+
+/**
+ * Ejecuta la habilidad correspondiente según la clase del jugador.
+ * @param {number} habilidadIndex - Índice de la habilidad a ejecutar (0 a 3).
+ * @param {Enemigo} enemigo - Enemigo actual del combate.
+ */
+function usarHabilidad(habilidadIndex, enemigo) {
+  switch (player.clase) {
+    case "Mago":
+      switch (habilidadIndex) {
+        case 0: {
+          // Bola de Fuego
+          const dmg = 20 + enteroRandom(0, 5);
+          enemigo.pv -= dmg;
+          actualizarHistoria(`Lanzas una Bola de Fuego causando ${dmg} de daño.`);
+          break;
+        }
+        case 1: {
+          // Escudo Arcano
+          const bonus = 10;
+          player.armadura += bonus;
+          actualizarHistoria(`Activas un Escudo Arcano y aumentas tu armadura en ${bonus}.`);
+          break;
+        }
+        case 2: {
+          // Rayo Congelante
+          const dmg = 15 + enteroRandom(0, 5);
+          enemigo.pv -= dmg;
+          actualizarHistoria(`Lanzas un Rayo Congelante causando ${dmg} de daño y congelas al enemigo.`);
+          // Aquí podrías implementar una bandera para que el enemigo pierda un turno
+          break;
+        }
+        case 3: {
+          // Teletransporte
+          actualizarHistoria(`Te teletransportas, esquivando el próximo ataque enemigo.`);
+          // Podrías establecer una bandera para evitar el siguiente ataque.
+          break;
+        }
+      }
+      break;
+    case "Guerrero":
+      switch (habilidadIndex) {
+        case 0: {
+          // Golpe Poderoso
+          const dmg = 25 + enteroRandom(0, 5);
+          enemigo.pv -= dmg;
+          actualizarHistoria(`Realizas un Golpe Poderoso causando ${dmg} de daño.`);
+          break;
+        }
+        case 1: {
+          // Defensa de Acero
+          player.armadura += 15;
+          actualizarHistoria(`Activaste Defensa de Acero y aumentas tu armadura en 15.`);
+          break;
+        }
+        case 2: {
+          // Carga Brutal
+          const dmg = 20 + enteroRandom(0, 10);
+          enemigo.pv -= dmg;
+          actualizarHistoria(`Realizas una Carga Brutal causando ${dmg} de daño.`);
+          break;
+        }
+        case 3: {
+          // Grito de Batalla
+          player.puntaje += 10;
+          actualizarHistoria(`Emites un Grito de Batalla y ganas 10 puntos de puntaje.`);
+          break;
+        }
+      }
+      break;
+    case "Arquero":
+      switch (habilidadIndex) {
+        case 0: {
+          // Disparo Preciso
+          const dmg = 18 + enteroRandom(0, 5);
+          enemigo.pv -= dmg;
+          actualizarHistoria(`Disparas con precisión causando ${dmg} de daño.`);
+          break;
+        }
+        case 1: {
+          // Lluvia de Flechas
+          const dmg = 12 + enteroRandom(0, 8);
+          enemigo.pv -= dmg;
+          actualizarHistoria(`Realizas una Lluvia de Flechas causando ${dmg} de daño.`);
+          break;
+        }
+        case 2: {
+          // Tiro al Corazón
+          const dmg = 30;
+          enemigo.pv -= dmg;
+          actualizarHistoria(`Realizas un Tiro al Corazón causando ${dmg} de daño crítico.`);
+          break;
+        }
+        case 3: {
+          // Esquivar
+          actualizarHistoria(`Te preparas para esquivar, aumentando tu probabilidad de evadir el próximo ataque.`);
+          // Aquí podrías establecer una bandera para esquivar.
+          break;
+        }
+      }
+      break;
+    case "Ladron":
+      switch (habilidadIndex) {
+        case 0: {
+          // Ataque Sorpresa
+          const dmg = 20 + enteroRandom(0, 5);
+          enemigo.pv -= dmg;
+          actualizarHistoria(`Realizas un Ataque Sorpresa causando ${dmg} de daño.`);
+          break;
+        }
+        case 1: {
+          // Esquivar
+          actualizarHistoria(`Activas tu habilidad de Esquivar, incrementando tu evasión.`);
+          // Aquí podrías establecer una bandera para esquivar el siguiente ataque.
+          break;
+        }
+        case 2: {
+          // Robo
+          actualizarHistoria(`Intentas robar al enemigo. Si tienes éxito, podrías obtener un objeto.`);
+          // Aquí puedes implementar una probabilidad de robo y agregar lógica para añadir un item al inventario.
+          break;
+        }
+        case 3: {
+          // Finta
+          actualizarHistoria(`Realizas una Finta para confundir al enemigo, reduciendo su precisión.`);
+          break;
+        }
+      }
+      break;
+  }
+  // Guarda el estado actualizado del jugador
+  guardarDatos("player", player);
+}
+
+/**
+ * Muestra un menú de habilidades según la clase del jugador durante el combate.
+ * @param {Enemigo} enemigo - Enemigo actual del combate.
+ * @param {Function} volverHandler - Callback para regresar al menú principal de combate.
+ */
+function mostrarHabilidades(enemigo, volverHandler) {
+  let habilidades = [];
+  switch (player.clase) {
+    case "Mago":
+      habilidades = [
+        { label: "Bola de Fuego", handler: () => { usarHabilidad(0, enemigo); volverHandler(); } },
+        { label: "Escudo Arcano", handler: () => { usarHabilidad(1, enemigo); volverHandler(); } },
+        { label: "Rayo Congelante", handler: () => { usarHabilidad(2, enemigo); volverHandler(); } },
+        { label: "Teletransporte", handler: () => { usarHabilidad(3, enemigo); volverHandler(); } }
+      ];
+      break;
+    case "Guerrero":
+      habilidades = [
+        { label: "Golpe Poderoso", handler: () => { usarHabilidad(0, enemigo); volverHandler(); } },
+        { label: "Defensa de Acero", handler: () => { usarHabilidad(1, enemigo); volverHandler(); } },
+        { label: "Carga Brutal", handler: () => { usarHabilidad(2, enemigo); volverHandler(); } },
+        { label: "Grito de Batalla", handler: () => { usarHabilidad(3, enemigo); volverHandler(); } }
+      ];
+      break;
+    case "Arquero":
+      habilidades = [
+        { label: "Disparo Preciso", handler: () => { usarHabilidad(0, enemigo); volverHandler(); } },
+        { label: "Lluvia de Flechas", handler: () => { usarHabilidad(1, enemigo); volverHandler(); } },
+        { label: "Tiro al Corazón", handler: () => { usarHabilidad(2, enemigo); volverHandler(); } },
+        { label: "Esquivar", handler: () => { usarHabilidad(3, enemigo); volverHandler(); } }
+      ];
+      break;
+    case "Ladron":
+      habilidades = [
+        { label: "Ataque Sorpresa", handler: () => { usarHabilidad(0, enemigo); volverHandler(); } },
+        { label: "Esquivar", handler: () => { usarHabilidad(1, enemigo); volverHandler(); } },
+        { label: "Robo", handler: () => { usarHabilidad(2, enemigo); volverHandler(); } },
+        { label: "Finta", handler: () => { usarHabilidad(3, enemigo); volverHandler(); } }
+      ];
+      break;
+  }
+  mostrarOpciones(habilidades);
+}
 
 /**
  * Genera un número entero aleatorio en el rango [min, max).
@@ -195,7 +372,7 @@ function peleaPorTurnos(enemigo, volverHandler) {
     {
       label: "Atacar",
       handler: () => {
-        // Ataque del jugador
+        // Ataque básico del jugador
         const dmgJugador = 10 + enteroRandom(0, 3);
         enemigo.pv -= dmgJugador;
 
@@ -205,11 +382,9 @@ function peleaPorTurnos(enemigo, volverHandler) {
           );
           player.puntaje += enemigo.dificultad * 10;
           guardarDatos("player", player);
-          // Remover enemigo vencido (asumiendo que es el primero)
+          // Remueve el enemigo vencido
           enemigos.shift();
-          mostrarOpciones([
-            { label: "Continuar", handler: volverHandler }
-          ]);
+          mostrarOpciones([{ label: "Continuar", handler: volverHandler }]);
           return;
         }
 
@@ -225,7 +400,7 @@ function peleaPorTurnos(enemigo, volverHandler) {
           return;
         }
 
-        // Uso de setTimeout para evitar recursión profunda
+        // Se repite el turno de combate
         setTimeout(() => {
           peleaPorTurnos(enemigo, volverHandler);
         }, 0);
@@ -250,7 +425,6 @@ function peleaPorTurnos(enemigo, volverHandler) {
         if (player.pv > player.maxPv) {
           player.pv = player.maxPv;
         }
-
         guardarDatos("player", player);
 
         const dmgEnemigo = 5 + enteroRandom(0, enemigo.dificultad * 2);
@@ -275,12 +449,46 @@ function peleaPorTurnos(enemigo, volverHandler) {
       }
     },
     {
+      label: "Usar habilidad",
+      handler: () => {
+        // Se muestra el menú de habilidades según la clase del jugador
+        mostrarHabilidades(enemigo, () => {
+          // Verificar si el enemigo fue derrotado por la habilidad
+          if (enemigo.pv <= 0) {
+            actualizarHistoria(
+              `¡Venciste a ${enemigo.nombre}!\nGanás algo de experiencia...`
+            );
+            player.puntaje += enemigo.dificultad * 10;
+            guardarDatos("player", player);
+            enemigos.shift();
+            mostrarOpciones([{ label: "Continuar", handler: volverHandler }]);
+            return;
+          }
+          // Si el enemigo sigue vivo, ataca
+          const dmgEnemigo = 5 + enteroRandom(0, enemigo.dificultad * 2);
+          player.pv -= dmgEnemigo;
+          actualizarHistoria(
+            `El ${enemigo.nombre} aprovecha para atacar y te inflige ${dmgEnemigo} de daño.\n` +
+            `Tu PV actual: ${Math.max(player.pv, 0)}`
+          );
+          if (player.pv <= 0) {
+            actualizarHistoria(
+              `El ataque del ${enemigo.nombre} fue demasiado fuerte y quedaste en 0 PV.\nFin de la aventura.`
+            );
+            mostrarOpciones([]);
+            return;
+          }
+          setTimeout(() => {
+            peleaPorTurnos(enemigo, volverHandler);
+          }, 0);
+        });
+      }
+    },
+    {
       label: "Escapar",
       handler: () => {
         actualizarHistoria("Escapaste del combate. ¿Qué vas a hacer ahora?");
-        mostrarOpciones([
-          { label: "Volver", handler: volverHandler }
-        ], true);
+        mostrarOpciones([{ label: "Volver", handler: volverHandler }], true);
       }
     }
   ]);
@@ -372,6 +580,8 @@ function mostrarInventario(volverHandler = null) {
     mostrarOpciones([]);
   }
 }
+
+
 
 /*******************************************
  * 5) Historia y Lógica del Juego
