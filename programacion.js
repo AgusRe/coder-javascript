@@ -427,7 +427,7 @@ function peleaPorTurnos(enemigo, volverHandler) {
 
         setTimeout(() => {
           peleaPorTurnos(enemigo, volverHandler);
-        }, 0);
+        }, 1500);
       }
     },
     {
@@ -469,7 +469,7 @@ function peleaPorTurnos(enemigo, volverHandler) {
 
         setTimeout(() => {
           peleaPorTurnos(enemigo, volverHandler);
-        }, 0);
+        }, 1500);
       }
     },
     {
@@ -501,7 +501,7 @@ function peleaPorTurnos(enemigo, volverHandler) {
           }
           setTimeout(() => {
             peleaPorTurnos(enemigo, volverHandler);
-          }, 0);
+          }, 1500);
         });
       }
     },
