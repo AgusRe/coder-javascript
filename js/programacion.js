@@ -1,3 +1,5 @@
+import { obtenerMision } from './misiones.js';
+
 /*******************************************
  * 1) Clases y Variables Globales 
  *******************************************/
@@ -792,7 +794,7 @@ function cazarMonstruos() {
 }
 
 /**
- * Simula ir al gremio de aventureros.
+ * Simula ir al gremio de aventureros y mostrar una misión aleatoria en la recepcionista.
  */
 function irAlGremio() {
   actualizarHistoria(
@@ -802,30 +804,30 @@ function irAlGremio() {
   player.puntaje += 5;
   guardarDatos("player", player);
 
+  // Obtenemos una misión aleatoria desde misiones.js
+  const mision = obtenerMision();
+
   mostrarOpciones([
     {
       label: "Hablar con la recepcionista",
       handler: () => {
-        (async function(){
-          const detalle = await obtenerDetalleMision();
-          actualizarHistoria(
-            `Recepcionista:<br>Bienvenido al Gremio de Aventureros. Te muestro el tablón de misiones: "${detalle}".`
-          );
-          player.puntaje += 2;
-          guardarDatos("player", player);
-          mostrarOpciones([
-            {
-              label: "Aceptar una misión",
-              handler: () => {
-                actualizarHistoria("Elegís una misión de matar monstruos y te preparás para salir a cumplirla.");
-                player.puntaje += 5;
-                guardarDatos("player", player);
-                mostrarOpciones([{ label: "Continuar", handler: () => textoMonstruos() }]);
-              }
-            },
-            { label: "Volver", handler: () => siguientePasoGremio() }
-          ]);
-        })();
+        actualizarHistoria(
+          `Recepcionista:<br>Bienvenido al Gremio de Aventureros. Tablón de misiones: "<strong>${mision.titulo}</strong> - ${mision.descripcion}".`
+        );
+        player.puntaje += 2;
+        guardarDatos("player", player);
+        mostrarOpciones([
+          {
+            label: "Aceptar misión",
+            handler: () => {
+              actualizarHistoria("Elegís una misión de matar monstruos y te preparás para cumplirla.");
+              player.puntaje += 5;
+              guardarDatos("player", player);
+              mostrarOpciones([{ label: "Continuar", handler: () => textoMonstruos() }]);
+            }
+          },
+          { label: "Volver", handler: () => siguientePasoGremio() }
+        ]);
       }
     },
     {

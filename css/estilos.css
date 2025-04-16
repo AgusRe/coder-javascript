@@ -48,11 +48,6 @@ p {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   line-height: 1.6;
 }
-#story-text .highlight {
-  overflow-y: auto;
-  padding: 0.5rem;
-  border-radius: 6px;
-}
 #story-text p.current {
   color: #000;
 }
