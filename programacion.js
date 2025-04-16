@@ -93,16 +93,47 @@ const choicesDiv = document.getElementById("choices");
 const statsDiv = document.getElementById("stats");
 
 /**
- * Actualiza el texto de la historia en el DOM.
+ * Actualiza (acumula) el contenido de la historia en el DOM.
+ * Al comenzar una nueva sesión se puede limpiar el área (clear = true).
+ * En cada actualización, todos los mensajes previos se marcan como "past" (texto gris) y el mensaje actual se agrega con la clase "current" (texto en negro) para dejar simbolizado un poco mejor cuál es el cuadro de texto con el que está hablando el usuario en el momento.
  * @param {string} text - Texto a mostrar.
+ * @param {boolean} clear - Si es true, se limpia el contenido previo.
  */
-function actualizarHistoria(text) {
-  storyText.innerText = text;
+function actualizarHistoria(text, clear = false) {
+  if (clear) {
+    storyText.innerHTML = "";
+  } else {
+    // Transformar todos los párrafos existentes a historial (clase "past")
+    Array.from(storyText.getElementsByTagName("p")).forEach(p => {
+      p.classList.remove("current");
+      p.classList.add("past");
+    });
+  }
+  const p = document.createElement("p");
+  p.innerHTML = text;
+  p.classList.add("current"); // Mensaje actual (negrita en negro)
+  storyText.appendChild(p);
+  storyText.scrollTop = storyText.scrollHeight;
+
+  // Efecto de tipeo letra por letra usando anime.js
+  let i = 0;
+
+  anime({
+    targets: {},
+    duration: text.length * 200,
+    easing: 'linear',
+    update: function() {
+      if (i <= text.length) {
+        p.innerHTML = text.substring(0, i);
+        storyText.scrollTop = storyText.scrollHeight;
+        i++;
+      }
+    }
+  });
 }
 
 /**
- * Actualiza la pestaña de estadísticas con los datos actuales del jugador,
- * incluyendo el inventario en forma de lista vertical.
+ * Actualiza la pestaña de estadísticas con los datos actuales del jugador, incluyendo el inventario en forma de lista vertical y muestra un botón de reiniciar que usa SweetAlert2.
  */
 function actualizarStats() {
   if (player && statsDiv) {
@@ -123,25 +154,27 @@ function actualizarStats() {
       Clase: ${player.clase}<br>
       Puntaje: ${player.puntaje}<br>
       <strong>Inventario:</strong> ${inventarioHTML}
+      <br>
+      <button id="reiniciarBtn" class="btn btn-secondary">Reiniciar</button>
     `;
+    document.getElementById("reiniciarBtn").addEventListener("click", reiniciarJuego);
   }
 }
 
 /**
  * Muestra opciones como botones en el contenedor de choices.
- * Utiliza DocumentFragment para minimizar repintados.
+ * Se utiliza DocumentFragment para minimizar repintados.
  * @param {Array} choices - Array de objetos con propiedades label y handler.
- * @param {boolean} fullWidth - Indica si se muestra un solo botón ancho.
+ * @param {boolean} fullWidth - Indica si se muestra un botón ancho.
  */
 function mostrarOpciones(choices, fullWidth = false) {
   choicesDiv.classList.remove("two-rows");
-
   if (fullWidth) {
     choicesDiv.classList.add("single-button");
   } else {
     choicesDiv.classList.remove("single-button");
   }
-
+  
   // Limpiar opciones anteriores
   choicesDiv.innerHTML = "";
 
@@ -157,8 +190,22 @@ function mostrarOpciones(choices, fullWidth = false) {
 }
 
 /**
+ * Deshabilita temporalmente los botones de opciones.
+ */
+function disableOpciones() {
+  document.querySelectorAll("#choices button").forEach(btn => btn.disabled = true);
+}
+
+/**
+ * Habilita los botones de opciones.
+ */
+function enableOpciones() {
+  document.querySelectorAll("#choices button").forEach(btn => btn.disabled = false);
+}
+
+/**
  * Guarda datos en LocalStorage y actualiza las estadísticas.
- * @param {string} key - Clave para almacenar el dato.
+ * @param {string} key - Clave de almacenamiento.
  * @param {any} data - Datos a almacenar.
  */
 function guardarDatos(key, data) {
@@ -189,36 +236,34 @@ function cargarDatos(key) {
 
 /**
  * Ejecuta la habilidad correspondiente según la clase del jugador.
- * @param {number} habilidadIndex - Índice de la habilidad a ejecutar (0 a 3).
+ * Se deshabilitan las opciones mientras se muestra el mensaje con delay.
+ * @param {number} habilidadIndex - Índice de la habilidad (0 a 3).
  * @param {Enemigo} enemigo - Enemigo actual del combate.
  */
 function usarHabilidad(habilidadIndex, enemigo) {
+  disableOpciones();
   switch (player.clase) {
     case "Mago":
       switch (habilidadIndex) {
         case 0: {
-          // Bola de Fuego
           const dmg = 20 + enteroRandom(0, 5);
           enemigo.pv -= dmg;
           actualizarHistoria(`Lanzas una Bola de Fuego causando ${dmg} de daño.`);
           break;
         }
         case 1: {
-          // Escudo Arcano
           const bonus = 10;
           player.armadura += bonus;
           actualizarHistoria(`Activas un Escudo Arcano y aumentas tu armadura en ${bonus}.`);
           break;
         }
         case 2: {
-          // Rayo Congelante
           const dmg = 15 + enteroRandom(0, 5);
           enemigo.pv -= dmg;
           actualizarHistoria(`Lanzas un Rayo Congelante causando ${dmg} de daño y congelas al enemigo.`);
           break;
         }
         case 3: {
-          // Teletransporte
           actualizarHistoria(`Te teletransportas, esquivando el próximo ataque enemigo.`);
           break;
         }
@@ -227,27 +272,23 @@ function usarHabilidad(habilidadIndex, enemigo) {
     case "Guerrero":
       switch (habilidadIndex) {
         case 0: {
-          // Golpe Poderoso
           const dmg = 25 + enteroRandom(0, 5);
           enemigo.pv -= dmg;
           actualizarHistoria(`Realizas un Golpe Poderoso causando ${dmg} de daño.`);
           break;
         }
         case 1: {
-          // Defensa de Acero
           player.armadura += 15;
           actualizarHistoria(`Activaste Defensa de Acero y aumentas tu armadura en 15.`);
           break;
         }
         case 2: {
-          // Carga Brutal
           const dmg = 20 + enteroRandom(0, 10);
           enemigo.pv -= dmg;
           actualizarHistoria(`Realizas una Carga Brutal causando ${dmg} de daño.`);
           break;
         }
         case 3: {
-          // Grito de Batalla
           player.puntaje += 10;
           actualizarHistoria(`Emites un Grito de Batalla y ganas 10 puntos de puntaje.`);
           break;
@@ -257,28 +298,24 @@ function usarHabilidad(habilidadIndex, enemigo) {
     case "Arquero":
       switch (habilidadIndex) {
         case 0: {
-          // Disparo Preciso
           const dmg = 18 + enteroRandom(0, 5);
           enemigo.pv -= dmg;
           actualizarHistoria(`Disparas con precisión causando ${dmg} de daño.`);
           break;
         }
         case 1: {
-          // Lluvia de Flechas
           const dmg = 12 + enteroRandom(0, 8);
           enemigo.pv -= dmg;
           actualizarHistoria(`Realizas una Lluvia de Flechas causando ${dmg} de daño.`);
           break;
         }
         case 2: {
-          // Tiro al Corazón
           const dmg = 30;
           enemigo.pv -= dmg;
           actualizarHistoria(`Realizas un Tiro al Corazón causando ${dmg} de daño crítico.`);
           break;
         }
         case 3: {
-          // Esquivar
           actualizarHistoria(`Te preparas para esquivar, aumentando tu probabilidad de evadir el próximo ataque.`);
           break;
         }
@@ -287,32 +324,28 @@ function usarHabilidad(habilidadIndex, enemigo) {
     case "Ladron":
       switch (habilidadIndex) {
         case 0: {
-          // Ataque Sorpresa
           const dmg = 20 + enteroRandom(0, 5);
           enemigo.pv -= dmg;
           actualizarHistoria(`Realizas un Ataque Sorpresa causando ${dmg} de daño.`);
           break;
         }
         case 1: {
-          // Esquivar
           actualizarHistoria(`Activas tu habilidad de Esquivar, incrementando tu evasión.`);
           break;
         }
         case 2: {
-          // Robo
           actualizarHistoria(`Intentas robar al enemigo. Si tienes éxito, podrías obtener un objeto.`);
           break;
         }
         case 3: {
-          // Finta
           actualizarHistoria(`Realizas una Finta para confundir al enemigo, reduciendo su precisión.`);
           break;
         }
       }
       break;
   }
-  // Guarda el estado actualizado del jugador
   guardarDatos("player", player);
+  setTimeout(() => { enableOpciones(); }, 1200);
 }
 
 /**
@@ -382,46 +415,49 @@ function crearEnemigosHistoria() {
 
 /**
  * Función que maneja la pelea por turnos entre el jugador y un enemigo.
- * Se evita la recursión profunda utilizando setTimeout para delegar en el event loop.
+ * Se utiliza setTimeout para evitar recursión profunda.
  * @param {Enemigo} enemigo - Enemigo a combatir.
  * @param {Function} volverHandler - Callback para continuar la historia.
  */
 function peleaPorTurnos(enemigo, volverHandler) {
   actualizarHistoria(
-    `¡Combate contra ${enemigo.nombre}!\n` +
-    `Tus PV: ${player.pv}\n` +
-    `PV Enemigo: ${enemigo.pv}`
+    `¡Combate contra ${enemigo.nombre}!<br>Tus PV: ${player.pv}<br>PV Enemigo: ${enemigo.pv}`,
+    false
   );
 
   mostrarOpciones([
     {
       label: "Atacar",
       handler: () => {
-        // Ataque básico del jugador
+        disableOpciones();
         const dmgJugador = 10 + enteroRandom(0, 3);
         enemigo.pv -= dmgJugador;
+        actualizarHistoria(`Atacas y causas ${dmgJugador} de daño.`);
 
         if (enemigo.pv <= 0) {
-          actualizarHistoria(
-            `¡Venciste a ${enemigo.nombre}!\nGanás algo de experiencia...`
-          );
+          actualizarHistoria(`¡Venciste a ${enemigo.nombre}! Ganás experiencia.`);
           player.puntaje += enemigo.dificultad * 10;
           guardarDatos("player", player);
-          // Remueve el enemigo vencido
           enemigos.shift();
-          mostrarOpciones([{ label: "Continuar", handler: volverHandler }]);
+          setTimeout(() => {
+            mostrarOpciones([{ label: "Continuar", handler: volverHandler }]);
+          }, 1200);
           return;
         }
 
-        // Ataque del enemigo
-        const dmgEnemigo = 5 + enteroRandom(0, enemigo.dificultad * 2);
+        const dmgEnemigo = 5 + enteroRandom(0, enemigo.dificultad * 3);
         player.pv -= dmgEnemigo;
-
+        actualizarHistoria(`El ${enemigo.nombre} ataca y te inflige ${dmgEnemigo} de daño.<br>Tu PV: ${Math.max(player.pv, 0)}`);
         if (player.pv <= 0) {
-          actualizarHistoria(
-            `¡${enemigo.nombre} te ha derrotado! Tus PV han llegado a 0.\nFin de la aventura.`
-          );
-          mostrarOpciones([{ label: "Reiniciar", handler: reiniciarJuego }]);
+          actualizarHistoria(`¡El ataque de ${enemigo.nombre} fue mortal! Fin de la aventura.`);
+          Swal.fire({
+            title: '¡Has perdido!',
+            text: 'El enemigo te ha derrotado.',
+            icon: 'error',
+            confirmButtonText: 'Continuar'
+          }).then(() => {
+            finalizarJuego();
+          });
           return;
         }
 
@@ -433,12 +469,13 @@ function peleaPorTurnos(enemigo, volverHandler) {
     {
       label: "Usar poción (si tenés)",
       handler: () => {
+        disableOpciones();
         const pocion = player.inventario.find(i => i.nombre.includes("Poción"));
         if (!pocion) {
           actualizarHistoria("No tenés ninguna poción de vida.");
-          mostrarOpciones([
-            { label: "Volver", handler: () => setTimeout(() => peleaPorTurnos(enemigo, volverHandler), 0) }
-          ], true);
+          setTimeout(() => {
+            mostrarOpciones([{ label: "Volver", handler: () => setTimeout(() => peleaPorTurnos(enemigo, volverHandler), 0) }]);
+          }, 1200);
           return;
         }
         pocion.cantidad -= 1;
@@ -453,17 +490,18 @@ function peleaPorTurnos(enemigo, volverHandler) {
 
         const dmgEnemigo = 5 + enteroRandom(0, enemigo.dificultad * 2);
         player.pv -= dmgEnemigo;
-
-        actualizarHistoria(
-          `El ${enemigo.nombre} te ataca e inflige ${dmgEnemigo} de daño.\n` +
-          `Tu PV actual: ${Math.max(player.pv, 0)}`
-        );
+        actualizarHistoria(`Mientras tomabas la poción, ${enemigo.nombre} te ataca por ${dmgEnemigo} de daño.<br>Tu PV: ${Math.max(player.pv, 0)}`);
 
         if (player.pv <= 0) {
-          actualizarHistoria(
-            `Mientras tomabas la poción, el ${enemigo.nombre} te golpeó y te dejó en 0 PV.\nFin de la aventura.`
-          );
-          mostrarOpciones([{ label: "Reiniciar", handler: reiniciarJuego }]);
+          actualizarHistoria(`La poción no fue suficiente y caes en combate.<br>Fin de la aventura.`);
+          Swal.fire({
+            title: '¡Has perdido!',
+            text: 'Te derrotó el enemigo.',
+            icon: 'error',
+            confirmButtonText: 'Continuar'
+          }).then(() => {
+            finalizarJuego();
+          });
           return;
         }
 
@@ -477,9 +515,7 @@ function peleaPorTurnos(enemigo, volverHandler) {
       handler: () => {
         mostrarHabilidades(enemigo, () => {
           if (enemigo.pv <= 0) {
-            actualizarHistoria(
-              `¡Venciste a ${enemigo.nombre}!\nGanás algo de experiencia...`
-            );
+            actualizarHistoria(`¡Venciste a ${enemigo.nombre}! Ganás experiencia.`);
             player.puntaje += enemigo.dificultad * 10;
             guardarDatos("player", player);
             enemigos.shift();
@@ -488,15 +524,17 @@ function peleaPorTurnos(enemigo, volverHandler) {
           }
           const dmgEnemigo = 5 + enteroRandom(0, enemigo.dificultad * 2);
           player.pv -= dmgEnemigo;
-          actualizarHistoria(
-            `El ${enemigo.nombre} aprovecha para atacar y te inflige ${dmgEnemigo} de daño.\n` +
-            `Tu PV actual: ${Math.max(player.pv, 0)}`
-          );
+          actualizarHistoria(`El ${enemigo.nombre} aprovecha y te ataca por ${dmgEnemigo} de daño.<br>Tu PV: ${Math.max(player.pv, 0)}`);
           if (player.pv <= 0) {
-            actualizarHistoria(
-              `El ataque del ${enemigo.nombre} fue demasiado fuerte y quedaste en 0 PV.\nFin de la aventura.`
-            );
-            mostrarOpciones([{ label: "Reiniciar", handler: reiniciarJuego }]);
+            actualizarHistoria(`El ataque fue demasiado fuerte. Fin de la aventura.`);
+            Swal.fire({
+              title: '¡Has perdido!',
+              text: 'El enemigo te derrotó.',
+              icon: 'error',
+              confirmButtonText: 'Continuar'
+            }).then(() => {
+              finalizarJuego();
+            });
             return;
           }
           setTimeout(() => {
@@ -508,8 +546,8 @@ function peleaPorTurnos(enemigo, volverHandler) {
     {
       label: "Escapar",
       handler: () => {
-        actualizarHistoria("Escapaste del combate. ¿Qué vas a hacer ahora?");
-        mostrarOpciones([{ label: "Volver", handler: volverHandler }], true);
+        actualizarHistoria("Escapas del combate. ¿Qué harás ahora?");
+        mostrarOpciones([{ label: "Volver", handler: volverHandler }]);
       }
     }
   ]);
@@ -580,7 +618,7 @@ function agregarItem(item) {
  */
 function mostrarInventario(volverHandler = null) {
   if (player.inventario.length === 0) {
-    actualizarHistoria("No tenés nada en el inventario.");
+    actualizarHistoria("No tenés nada en el inventario.", false);
     if (volverHandler) {
       mostrarOpciones([{ label: "Volver", handler: volverHandler }]);
     } else {
@@ -589,11 +627,11 @@ function mostrarInventario(volverHandler = null) {
     return;
   }
 
-  let mensaje = "Tu inventario:\n";
+  let mensaje = "Tu inventario:";
   player.inventario.forEach(obj => {
-    mensaje += `- ${obj.nombre} (Tipo: ${obj.tipo}, Cantidad: ${obj.cantidad})\n`;
+    mensaje += `<br> - ${obj.nombre} (Tipo: ${obj.tipo}, Cantidad: ${obj.cantidad})`;
   });
-  actualizarHistoria(mensaje);
+  actualizarHistoria(mensaje, false);
 
   if (volverHandler) {
     mostrarOpciones([{ label: "Volver", handler: volverHandler }]);
@@ -607,13 +645,54 @@ function mostrarInventario(volverHandler = null) {
  *******************************************/
 
 /**
+ * Descarga la historia completa del usuario en un archivo de texto.
+ */
+function descargarHistoria() {
+  const historiaCompleta = storyText.innerText;
+  const blob = new Blob([historiaCompleta], { type: "text/plain;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "historia.txt";
+  a.click();
+}
+
+/**
+ * Muestra una alerta al finalizar el juego para preguntar si se desea descargar la historia, y reinicia el juego.
+ */
+function finalizarJuego() {
+  Swal.fire({
+    title: 'Fin de la aventura',
+    text: '¿Deseas descargar la historia de tu aventura?',
+    icon: 'info',
+    showCancelButton: true,
+    confirmButtonText: 'Descargar',
+    cancelButtonText: 'No, gracias'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      descargarHistoria();
+    }
+    reiniciarJuego();
+  });
+}
+
+/**
  * Reinicia el juego borrando el progreso guardado y volviendo al inicio.
+ * Se utiliza SweetAlert2 para notificar el reinicio.
  */
 function reiniciarJuego() {
   localStorage.removeItem("player");
   player = null;
   enemigos = [];
-  historia();
+  actualizarHistoria("Reiniciando juego...", true);
+  setTimeout(() => {
+    Swal.fire({
+      title: '¡Juego Reiniciado!',
+      icon: 'info',
+      confirmButtonText: 'Aceptar'
+    }).then(() => {
+      historia();
+    });
+  }, 1200);
 }
 
 /**
@@ -665,7 +744,7 @@ function agregarKitbienvenida() {
  * Muestra las opciones de cazar monstruos y administra el flujo de combate.
  */
 function textoMonstruos() {
-  actualizarHistoria("Como decidiste cazar monstruos, el gremio te dio un kit de bienvenida.\n");
+  actualizarHistoria("Como decidiste cazar monstruos, el gremio te otorgó un kit de bienvenida.", false);
   agregarKitbienvenida();
   actualizarStats();
   mostrarOpciones([
@@ -686,13 +765,14 @@ function cazarMonstruos() {
   }
   const enemigoActual = enemigos[0];
   if (!enemigoActual) {
-    actualizarHistoria("No hay enemigos disponibles. ¡Has acabado con todos!");
+    actualizarHistoria("No hay enemigos disponibles. ¡Has acabado con todos!", false);
     mostrarOpciones([{ label: "Reiniciar", handler: reiniciarJuego }]);
     return;
   }
 
   actualizarHistoria(
-    `Te preparás para enfrentarte a ${enemigoActual.nombre} (dificultad ${enemigoActual.dificultad}).\n¡Que comience la batalla!`
+    `Te preparás para enfrentarte a ${enemigoActual.nombre} (dificultad ${enemigoActual.dificultad}).<br>¡Que comience la batalla!`,
+    false
   );
 
   mostrarOpciones([
@@ -716,9 +796,8 @@ function cazarMonstruos() {
  */
 function irAlGremio() {
   actualizarHistoria(
-    "Vas al gremio de aventureros siguiendo el mapa que te dio el Alcalde.\n" +
-    "Es un edificio grande con un cartel de una espada y un escudo cruzados.\n" +
-    "Adentro se escuchan murmullos de guerreros, magos y gente de todo tipo..."
+    "Vas al gremio de aventureros siguiendo el mapa que te dio el Alcalde.<br>" +
+    "Dentro, el ambiente se llena de murmullos de guerreros, magos y aventureros de todo tipo..."
   );
   player.puntaje += 5;
   guardarDatos("player", player);
@@ -727,51 +806,44 @@ function irAlGremio() {
     {
       label: "Hablar con la recepcionista",
       handler: () => {
-        actualizarHistoria(
-          "Recepcionista:\nBienvenido al Gremio de Aventureros. Si buscás información sobre tu pasado, " +
-          "capaz que encuentres algo en nuestros registros, o también podrías agarrar misiones para ganar plata."
-        );
-        player.puntaje += 2;
-        guardarDatos("player", player);
-        mostrarOpciones([
-          {
-            label: "Buscar misiones",
-            handler: () => {
-              actualizarHistoria("La recepcionista te muestra un tablón con misiones disponibles.");
-              mostrarOpciones([
-                {
-                  label: "Aceptar una misión",
-                  handler: () => {
-                    actualizarHistoria("Elegís una misión de matar monstruos y te preparás para salir a cumplirla.");
-                    player.puntaje += 5;
-                    guardarDatos("player", player);
-                    mostrarOpciones([{ label: "Continuar", handler: () => textoMonstruos() }]);
-                  }
-                },
-                { label: "Volver", handler: () => siguientePasoGremio() }
-              ]);
-            }
-          }
-        ]);
+        (async function(){
+          const detalle = await obtenerDetalleMision();
+          actualizarHistoria(
+            `Recepcionista:<br>Bienvenido al Gremio de Aventureros. Te muestro el tablón de misiones: "${detalle}".`
+          );
+          player.puntaje += 2;
+          guardarDatos("player", player);
+          mostrarOpciones([
+            {
+              label: "Aceptar una misión",
+              handler: () => {
+                actualizarHistoria("Elegís una misión de matar monstruos y te preparás para salir a cumplirla.");
+                player.puntaje += 5;
+                guardarDatos("player", player);
+                mostrarOpciones([{ label: "Continuar", handler: () => textoMonstruos() }]);
+              }
+            },
+            { label: "Volver", handler: () => siguientePasoGremio() }
+          ]);
+        })();
       }
     },
     {
       label: "Explorar la sala",
       handler: () => {
         actualizarHistoria(
-          "Observás a varios aventureros de distintas clases compartiendo historias de batallas.\n" +
-          "Ves un tablón de misiones con carteles de recompensas y un mostrador donde venden equipo.\n" +
-          "Quizás deberías volver más adelante para equiparte mejor."
+          "Observás a varios aventureros compartiendo historias de batallas.<br>" +
+          "Ves un tablón con misiones y un mostrador de equipo. Quizás debas volver más adelante para equiparte mejor."
         );
         player.puntaje += 2;
         guardarDatos("player", player);
-        mostrarOpciones([{ label: "Hablar con la recepcionista de vuelta.", handler: () => irAlGremio() }]);
+        mostrarOpciones([{ label: "Hablar con la recepcionista de vuelta", handler: () => irAlGremio() }]);
       }
     },
     {
       label: "Ir a cazar monstruos",
       handler: () => {
-        actualizarHistoria("Te preparás para cazar monstruos en las afueras del pueblo...");
+        actualizarHistoria("Te preparás para cazar monstruos en las afueras del pueblo...", true);
         player.puntaje += 5;
         guardarDatos("player", player);
         mostrarOpciones([{ label: "Continuar", handler: () => textoMonstruos() }]);
@@ -780,10 +852,10 @@ function irAlGremio() {
     {
       label: "Regresar a la aldea",
       handler: () => {
-        actualizarHistoria("Decidís volver a la aldea por el momento.");
+        actualizarHistoria("Decidís volver a la aldea por el momento.", true);
         mostrarOpciones([
           { label: "Volver", handler: () => siguientePasoAldea() },
-          { label: "Hablar con la recepcionista de vuelta.", handler: () => irAlGremio() }
+          { label: "Hablar con la recepcionista", handler: () => irAlGremio() }
         ]);
       }
     }
@@ -795,11 +867,12 @@ function irAlGremio() {
  */
 function siguientePasoAldea() {
   actualizarHistoria(
-    "El Alcalde te sugiere ir al gremio de aventureros.\n" +
-    "¿Qué querés hacer?\n\n" +
-    "1. Ir al gremio de aventureros.\n" +
-    "2. Explorar la aldea un poco más.\n" +
-    "3. Finalizar la aventura."
+    "El Alcalde te sugiere ir al gremio de aventureros.<br>" +
+    "¿Qué querés hacer?<br><br>" +
+    "1. Ir al gremio de aventureros.<br>" +
+    "2. Explorar la aldea un poco más.<br>" +
+    "3. Finalizar la aventura.",
+    true
   );
 
   mostrarOpciones([
@@ -807,9 +880,7 @@ function siguientePasoAldea() {
     {
       label: "Explorar la aldea",
       handler: () => {
-        actualizarHistoria(
-          "Decidís explorar la aldea un rato más. Te cruzás con varios aldeanos que te saludan amablemente."
-        );
+        actualizarHistoria("Decidís explorar la aldea. Conoces nuevos rostros y escuchas historias locales.");
         player.puntaje += 2;
         guardarDatos("player", player);
         mostrarOpciones([]);
@@ -818,10 +889,7 @@ function siguientePasoAldea() {
     {
       label: "Finalizar",
       handler: () => {
-        actualizarHistoria(
-          `Te alejás de la aldea y das por terminada tu aventura.\n` +
-          `Hasta acá llega la historia por el momento. Gracias por haber jugado ${player.nombre}!`
-        );
+        actualizarHistoria(`Te alejás de la aldea y das por terminada tu aventura.<br>Gracias por jugar, ${player.nombre}!`, true);
         mostrarOpciones([{ label: "Reiniciar", handler: reiniciarJuego }]);
       }
     }
@@ -833,12 +901,9 @@ function siguientePasoAldea() {
  */
 function hablarConElAlcalde() {
   actualizarHistoria(
-    "Alcalde:\n" +
-    `Hola ${player.nombre}, me contaron que perdiste la memoria.\n` +
-    "Por acá nunca te habíamos visto antes, pero no sos el primero en aparecer sin recuerdos.\n\n" +
-    "Creo que deberías ir al gremio de aventureros para ver si tienen un registro tuyo. " +
-    "Ellos anotan a todos los que pasan por esta región.\n" +
-    "Te dejo un mapa de la ciudad para que puedas ir sin problema."
+    `Alcalde:<br>Hola ${player.nombre}, me dijeron que perdiste la memoria.<br>` +
+    "Quizás deberías ir al gremio de aventureros para ver si tienen un registro tuyo.<br>" +
+    "Aquí tienes un mapa de la ciudad."
   );
   player.puntaje += 5;
   guardarDatos("player", player);
@@ -851,7 +916,7 @@ function hablarConElAlcalde() {
         actualizarHistoria("Decidiste explorar la aldea un poco más antes de ir al gremio.");
         mostrarOpciones([
           { label: "Explorar la aldea", handler: () => siguientePasoAldea() },
-          { label: "Hablar con el alcalde de vuelta.", handler: () => hablarConElAlcalde() }
+          { label: "Hablar con el alcalde", handler: () => hablarConElAlcalde() }
         ]);
       }
     }
@@ -863,28 +928,28 @@ function hablarConElAlcalde() {
  */
 function loreAldea() {
   actualizarHistoria(
-    "Aldeano:\n¡Hola! ¿Quién sos vos? No te había visto antes por acá.\n\n" +
-    `1. "Hola, soy ${player.nombre}. Soy un ${player.clase} aventurero y estoy en busca de mi pasado."\n` +
-    '2. "No es asunto tuyo."'
+    `Aldeano:<br>¡Hola! ¿Quién sos vos?<br><br>` +
+    `1. "Hola, soy ${player.nombre}. Soy un ${player.clase} aventurero en busca de mi pasado."<br>` +
+    '2. "No es asunto tuyo."',
+    false
   );
 
   mostrarOpciones([
     {
       label: "Opción 1",
       handler: () => {
-        actualizarHistoria(
-          "Aldeano:\n¿En serio? Deberías hablar con el Alcalde, es muy sabio. " +
-          "Él sabe todo lo que pasa por acá y seguramente te pueda ayudar."
-        );
+        actualizarHistoria("Aldeano:<br>¿En serio? Deberías hablar con el Alcalde, él sabe todo lo que pasa acá.");
         player.puntaje += 5;
         guardarDatos("player", player);
         mostrarOpciones([
           { label: "Ir con el Alcalde", handler: () => hablarConElAlcalde() },
-          { label: "Más tarde", handler: () => {
-              actualizarHistoria("Decidiste no hablar con el Alcalde por el momento.");
+          {
+            label: "Más tarde",
+            handler: () => {
+              actualizarHistoria("Decidiste no hablar con el Alcalde por ahora.");
               mostrarOpciones([
                 { label: "Explorar la aldea", handler: () => siguientePasoAldea() },
-                { label: "Hablar con el alcalde.", handler: () => hablarConElAlcalde() }
+                { label: "Hablar con el alcalde", handler: () => hablarConElAlcalde() }
               ]);
             }
           }
@@ -894,7 +959,7 @@ function loreAldea() {
     {
       label: "Opción 2",
       handler: () => {
-        actualizarHistoria("Aldeano:\n¡Ah bueno! Entonces no me hagas perder más el tiempo. Andate de acá.");
+        actualizarHistoria("Aldeano:<br>¡Entonces no me hagas perder el tiempo! Andate ya.");
         player.puntaje -= 3;
         guardarDatos("player", player);
         mostrarOpciones([{ label: "Reiniciar", handler: reiniciarJuego }]);
@@ -907,29 +972,22 @@ function loreAldea() {
  * Interacción inicial con un aldeano en la aldea.
  */
 function interaccionConAldeano() {
-  actualizarHistoria(
-    "Decidís ir a dar una vuelta por la aldea y te encontrás con un aldeano.\n" +
-    "¿Querés hablar con él o ignorarlo?"
-  );
-
+  actualizarHistoria("Decidís dar una vuelta por la aldea y te encontrás con un aldeano. ¿Querés hablar o ignorarlo?", false);
   mostrarOpciones([
     { label: "Hablar con él", handler: () => loreAldea() },
     { label: "Ignorarlo", handler: () => {
         actualizarHistoria("No está bueno aislarse. Pensalo de nuevo.");
-        mostrarOpciones([{ label: "Volver", handler: () => interaccionConAldeano() }], true);
+        mostrarOpciones([{ label: "Volver", handler: () => interaccionConAldeano() }]);
       }
     }
   ]);
 }
 
 /**
- * Pide al usuario que ingrese su nombre y permite elegir la clase.
+ * Pide al usuario que ingrese su nombre y permita elegir la clase.
  */
 function nombreYClase() {
-  actualizarHistoria(
-    "Para continuar, elige tu nombre:\nTené en cuenta que no vas a poder cambiarlo después."
-  );
-
+  actualizarHistoria("Para continuar, ingresa tu nombre (no lo podrás cambiar después).", false);
   choicesDiv.innerHTML = "";
   choicesDiv.classList.add("two-rows");
 
@@ -942,36 +1000,34 @@ function nombreYClase() {
   const btnOk = document.createElement("button");
   btnOk.innerText = "OK";
   btnOk.classList.add("btn", "btn-success", "m-1");
-
   btnOk.addEventListener("click", () => {
     const nombreIngresado = entradaNombre.value.trim();
     if (!nombreIngresado) {
-      actualizarHistoria("❌ Ingresá un nombre válido.");
-      mostrarOpciones([{ label: "Reintentar", handler: () => nombreYClase() }], true);
+      actualizarHistoria("❌ Ingresá un nombre válido.", false);
+      mostrarOpciones([{ label: "Reintentar", handler: () => nombreYClase() }]);
       return;
     }
     if (nombreIngresado.length < 2) {
-      actualizarHistoria("❌ El nombre debe tener al menos 2 caracteres.");
-      mostrarOpciones([{ label: "Reintentar", handler: () => nombreYClase() }], true);
+      actualizarHistoria("❌ El nombre debe tener al menos 2 caracteres.", false);
+      mostrarOpciones([{ label: "Reintentar", handler: () => nombreYClase() }]);
       return;
     }
     if (nombreIngresado.length > 15) {
-      actualizarHistoria("❌ El nombre no puede superar los 15 caracteres.");
-      mostrarOpciones([{ label: "Reintentar", handler: () => nombreYClase() }], true);
+      actualizarHistoria("❌ El nombre no puede superar los 15 caracteres.", false);
+      mostrarOpciones([{ label: "Reintentar", handler: () => nombreYClase() }]);
       return;
     }
     elegirClase(nombreIngresado);
   });
-
   choicesDiv.appendChild(btnOk);
 }
 
 /**
  * Permite al usuario elegir la clase del personaje.
- * @param {string} nombreIngresado - Nombre ingresado por el usuario.
+ * @param {string} nombreIngresado - Nombre ingresado.
  */
 function elegirClase(nombreIngresado) {
-  actualizarHistoria("Elige una clase:\n1. 🧙‍♂️ Mago\n2. 🦝 Ladrón\n3. 🏹 Arquero\n4. 🛡️ Guerrero");
+  actualizarHistoria("Elige una clase:<br>1. 🧙‍♂️ Mago<br>2. 🦝 Ladrón<br>3. 🏹 Arquero<br>4. 🛡️ Guerrero", false);
 
   mostrarOpciones([
     { label: "Mago", handler: () => { player = new Player(nombreIngresado, "Mago"); guardarDatos("player", player); interaccionConAldeano(); } },
@@ -985,45 +1041,56 @@ function elegirClase(nombreIngresado) {
  * Función principal que inicia la historia.
  */
 function historia() {
-  // Al cargar la página se revisa si existe un jugador guardado para continuar la partida
   const jugadorGuardado = cargarDatos("player");
   if (jugadorGuardado) {
     player = jugadorGuardado;
     actualizarStats();
-    actualizarHistoria(`Bienvenido de nuevo, ${player.nombre}.\nContinuás tu aventura...`);
-    setTimeout(() => textoMonstruos(), 2000);
+    actualizarHistoria(`Bienvenido de nuevo, ${player.nombre}.<br>Continuás tu aventura...`, false);
+    setTimeout(() => { textoMonstruos(); }, 2000);
   } else {
     actualizarHistoria(
-      "Sos un aventurero que despertó en una pequeña aldea en las afueras del reino de Aurora.\n" +
-      "Nadie sabe de dónde venís ni nada de tu pasado.\n" +
-      "Llevás una bolsa con algunas monedas y un mapa que señala un castillo en ruinas.\n\n" +
-      "¿Deseás comenzar la historia?"
+      "Sos un aventurero que despertó en una pequeña aldea en las afueras del reino de Aurora.<br>" +
+      "Nadie sabe de dónde venís ni nada de tu pasado.<br>" +
+      "Llevás una bolsa con algunas monedas y un mapa que señala un castillo en ruinas.<br><br>" +
+      "¿Deseás comenzar la historia?",
+      false
     );
-
     mostrarOpciones([
       { label: "Aceptar", handler: () => nombreYClase() },
       { label: "Playground", handler: () => {
-          mostrarOpciones([]);
           actualizarHistoria(
-            "Decidiste ir a cazar monstruos en las afueras del pueblo...\n\n" +
-            "⚔️ Tu clase será: Mago\n" +
-            "📝 Tu nombre será: Playground"
+            "Decidiste cazar monstruos en las afueras del pueblo...<br>" +
+            "⚔️ Tu clase será: Mago<br>" +
+            "📝 Tu nombre será: Playground",
+            false
           );
           player = new Player("Playground", "Mago");
           guardarDatos("player", player);
-          setTimeout(() => textoMonstruos(), 2000);
+          setTimeout(() => { textoMonstruos(); }, 2000);
         }
       }
     ]);
   }
 }
 
-// Guarda automáticamente el progreso cuando se cierra la pestaña
+// Guarda automáticamente el progreso antes de abandonar la pestaña
 window.addEventListener("beforeunload", () => {
   if (player) {
     guardarDatos("player", player);
   }
 });
+
+// Función asíncrona que usa fetch para obtener detalles remotos de misión.
+async function obtenerDetalleMision() {
+  try {
+    const response = await fetch('https://jsonplaceholder.typicode.com/posts/1');
+    const data = await response.json();
+    return data.title; // Se usa el título del post como detalle de misión.
+  } catch (error) {
+    console.error("Error en fetch de misión:", error);
+    return "Detalle de misión no disponible.";
+  }
+}
 
 // Inicia la historia
 historia();

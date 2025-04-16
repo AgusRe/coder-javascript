@@ -3,24 +3,14 @@
   padding: 0;
 }
 
-h1 {
+h1, h2, h3, .nav-link, p {
   font-family: "Funnel Display", sans-serif;
-}
-
-h2 {
-  font-family: "Funnel Display", sans-serif;
-}
-
-h3 {
-  font-family: "Funnel Display", sans-serif;
-}
-
-.nav-link {
-  font-family: "Funnel Display", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
 }
 
 p {
-  font-family: "Funnel Display", sans-serif;
+  font-size: 1.1rem;
 }
 
 .main-contenedor {
@@ -46,11 +36,28 @@ p {
 
 #story-text {
   min-height: 300px;
-  background-color: #ffffff;
+  max-height: 500px;
   color: #000;
-  border-radius: 8px;
-  padding: 1rem;
+  background-color: #ffffff;
+  font-family: "Macondo", cursive;
+  font-size: 1.2rem;
+  border-radius: 12px;
+  padding: 1.2rem;
   overflow-y: auto;
+  border: 2px solid #ccc;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  line-height: 1.6;
+}
+#story-text .highlight {
+  overflow-y: auto;
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+#story-text p.current {
+  color: #000;
+}
+#story-text p.past {
+  color: #777;
 }
 
 #choices {

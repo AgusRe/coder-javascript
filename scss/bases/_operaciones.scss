@@ -6,22 +6,12 @@
     padding: 0;
 }
 
-h1 {
+h1, h2, h3, .nav-link, p {
     font-family: "Funnel Display", sans-serif;
-}
-
-h2 {
-    font-family: "Funnel Display", sans-serif;
-}
-
-h3 {
-    font-family: "Funnel Display", sans-serif;
-}
-
-.nav-link {
-    font-family: "Funnel Display", sans-serif;
+    font-optical-sizing: auto;
+    font-style: normal;
 }
 
 p {
-    font-family: "Funnel Display", sans-serif;
+    font-size: 1.1rem;
 }
