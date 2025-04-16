@@ -1,71 +1,66 @@
 # Proyecto 2 de JavaScript
 
-Este proyecto fue creado como parte de la cursada de JavaScript en [Coderhouse](https://www.coderhouse.com/). El objetivo principal es comprender y practicar la lógica de programación con JavaScript a través de un juego RPG de decisiones, donde el jugador:
-- Elige una clase.
-- Administra un inventario (con un kit de bienvenida).
-- Explora distintas rutas narrativas.
-- Participa en combates por turnos con distintos enemigos.
+Este proyecto se desarrolla como parte de la cursada de JavaScript en [Coderhouse](https://www.coderhouse.com/). El objetivo es profundizar la lógica de programación a través de un **juego RPG de decisiones**, en el que el jugador:
 
-Posteriormente, se van a ir añadiendo mejoras al **sistema de combate**, la **lógica de vida limitada** (no puede exceder la vida base + 5), y la **creación progresiva de enemigos**.
+1. **Selecciona** una clase (Mago, Ladrón, Arquero o Guerrero).  
+2. **Administra** un inventario (incluyendo un kit de bienvenida).  
+3. **Explora** diferentes rutas narrativas en un mundo de fantasía.  
+4. **Participa** en combates por turnos contra diversos enemigos.
+
+Con el tiempo, se agregaron y se van a seguir añadiendo mejoras al **sistema de combate**, la **lógica de vida limitada** (PV base + 5), la **creación progresiva de enemigos**, y ahora un **menú de habilidades** según la clase.
 
 ---
 
 ## Descripción General
 
-El proyecto consiste en un **simulador de decisiones** ambientado en un mundo de fantasía. El jugador despierta sin recuerdos en la aldea del reino de **Aurora** y, a partir de ahí, debe interactuar con aldeanos, un alcalde y un gremio de aventureros para descubrir pistas sobre su pasado. Además, existe la posibilidad de cazar monstruos en las afueras del pueblo y **pelear** en un sistema de combate por turnos.
+El juego inicia cuando el personaje despierta sin recuerdos en la aldea del reino de **Aurora**, debiendo interactuar con aldeanos, un alcalde y el gremio de aventureros para descubrir su pasado. A su vez, puede cazar monstruos en las afueras y combatir en un sistema de **turnos**, donde cada clase posee habilidades especiales.
 
-1. **Elección de clase**: El jugador puede ser **Mago**, **Ladrón**, **Arquero** o **Guerrero**. Cada clase tiene una vida base distinta (100, 80, 90, 120, respectivamente) y **no puede exceder su vida base + 5**.
-2. **Interacción con personajes**: Diálogos con aldeanos y el Alcalde para avanzar en la historia y obtener información.
-3. **Exploración**: Opciones para ir al **Gremio de Aventureros**, explorar la aldea o cazar monstruos en las afueras.
-4. **Sistema de Inventario**: Manejo de ítems (objetos) con nombre, tipo, valor y cantidad, además de un **kit de bienvenida** inicial.
-5. **Sistema de Combate por Turnos**: El jugador y el enemigo se alternan ataques. El jugador puede usar pociones para curarse (sin superar su vida máxima) o huir del combate.
-6. **Creación de Enemigos**: Primero se enfrentan enemigos fijos (Slime, Lobo, Hada Maligna). Luego, se generan enemigos aleatorios (Orco, Zombi, Esqueleto, etc.) con mayor dificultad.
-7. **LocalStorage**: Se guardan datos relevantes (como el `player` y su inventario) para persistir entre recargas de página.
-8. **Ramas Narrativas**: Las decisiones influyen en el **puntaje** y en la **progresión** de la historia, aunque todavía no se creó un *scoreboard* para guardar los resultados.
+- **Vida y Clase**: Cada clase (Mago, Ladrón, Arquero, Guerrero) tiene vida base distinta, no excedible más de 5 puntos.  
+- **Inventario**: Se maneja a través de objetos (ítems) que se muestran en el DOM y se almacenan en LocalStorage.  
+- **Combate por Turnos**: El jugador ataca, el enemigo contraataca, y hay opciones de usar pociones, habilidades o escapar.  
+- **Enemigos**: Se enfrentan enemigos fijos (Slime, Lobo, Hada Maligna) y luego se generan aleatoriamente (Orco, Zombi, etc.) con dificultad creciente.  
+- **LocalStorage**: Se guardan datos relevantes (`player`, inventario) para persistir entre recargas.
 
 ---
 
-## Rama de Diálogo Más Larga
+## Ruta de Diálogo Más Larga
 
-La ruta más extensa en el árbol de diálogos (según la lógica actual) es la siguiente:
+1. **Comienzo**: Se elige iniciar o cancelar la historia.  
+2. **Elección de Nombre y Clase**: El jugador ingresa un nombre y una clase.  
+3. **Interacción con Aldeano**: Opción de hablar con él.  
+4. **Hablar con el Alcalde**: Se obtiene información adicional.  
+5. **Ir al Gremio**: El jugador puede explorar, recibir misiones o cazar monstruos.  
+6. **Enemigos**: Se presentan los combates por turnos y se prueba el nuevo sistema de habilidades.  
 
-1. **Comienzo**: Confirmar que se desea iniciar la historia (`storyTime`).  
-2. **Elección de Nombre y Clase** (`nombreYClase`).  
-3. **Interacción con el aldeano**: Opción **1** (Hablar con él).  
-4. **Respuesta al aldeano**: Opción **1** (Presentarte amablemente) → hablas con el Alcalde.  
-5. **Hablar con el Alcalde** (`hablarConElAlcalde`).  
-6. **Siguiente Paso** (`siguientePasoAldea`): Opción **1** (Ir al gremio de aventureros).  
-7. **En el gremio** (`irAlGremio`): Opción **3** (Ir a cazar monstruos).
-
-Este recorrido abarca la mayor cantidad de diálogos y eventos de la historia actual.
-Para probar el 'sistema de combate', en el **(1) Comienzo** se debe tocar rechazar y se irá directamente a un playground para probar los diferentes cambios nuevos.
+Si se rechaza al principio, se salta la historia y se va directamente a cazar monstruos (modo playground) para probar cambios recientes.
 
 ---
 
 ## Estructura de Archivos
 
 - **index.html**  
-  Contiene la estructura base del proyecto y hace referencia al archivo JavaScript.
+  Contiene la estructura base y referencia al JavaScript principal.
 
 - **programacion.js**  
-  Archivo JavaScript con toda la lógica del proyecto:
-  - **Clases** (`Player`, `Enemigo`) con propiedades de vida (`pv`, `maxPv`), inventario, etc.
-  - **Funciones** que controlan el flujo de la historia, los diálogos, la creación de enemigos y el combate por turnos.
-  - **LocalStorage** para persistir datos (como `player` y su inventario).
-  - **Kit de bienvenida** que se entrega al jugador solo una vez.
+  - **Clases**: `Player` y `Enemigo`, con propiedades como PV, ataque, inventario y métodos para combate.  
+  - **Funciones DOM**: Para mostrar la historia (`actualizarHistoria`), botones (`mostrarOpciones`), e inventario.  
+  - **Sistema de Combate**: Incluye la función `peleaPorTurnos` con opciones de ataque, uso de pociones, habilidades y escape.  
+  - **LocalStorage**: Para persistir datos (`player`) entre recargas.  
+  - **Kit de Bienvenida**: Solo se agrega la primera vez.  
+  - **Habilidades**: Cada clase tiene su menú de habilidades especiales.
 
 - **README.md**  
-  Explica la idea del proyecto, su estructura, cómo ejecutarlo y las últimas novedades agregadas.
+  Explica el objetivo del proyecto, su estructura, instrucciones de ejecución y últimas novedades.
 
 ---
 
 ## Cómo Ejecutar el Proyecto
 
-1. **Descargar o clonar** este repositorio.  
-2. **Abrir** el archivo `index.html` en un navegador web.  
-3. **Seguir** las instrucciones que aparecen en pantalla y en los cuadros de diálogo dentro del DOM.
+1. **Clonar o descargar** este repositorio.  
+2. **Abrir** `index.html` en un navegador.  
+3. **Seguir** las instrucciones en pantalla, usando los botones para interactuar con la historia y el combate.
 
-> **Nota**: Al tratarse de un proyecto enfocado en la lógica de JavaScript, la interacción ocurre principalmente en el **DOM** y se apoya en **LocalStorage** para persistir datos.
+> **Nota**: La experiencia se basa en **eventos del DOM** y se apoya en **LocalStorage** para guardar el progreso.
 
 ---
 
@@ -80,5 +75,5 @@ Para probar el 'sistema de combate', en el **(1) Comienzo** se debe tocar rechaz
 
 - [@AgusRe](https://github.com/AgusRe)
 
-Este proyecto se desarrolla como práctica para la cursada de JavaScript en Coderhouse.  
-¡Cualquier sugerencia o mejora será bienvenida!
+Este proyecto evoluciona con cada entrega y se perfecciona con la práctica de la cursada de JavaScript en Coderhouse.  
+¡Las sugerencias y mejoras son siempre bienvenidas!
