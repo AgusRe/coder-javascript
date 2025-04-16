@@ -11,6 +11,19 @@ Con el tiempo, se agregaron y se van a seguir añadiendo mejoras al **sistema de
 
 ---
 
+## 🆕 Novedades del Último Commit 'Grande'
+
+🔗 [Ver commit 3f592e4](https://github.com/AgusRe/coder-javascript/commit/3f592e49c301478a993deb23cb1644641b2b00f4)
+
+- **Refactorización de Estilos**: Unificación de fuentes y mejora de la visualización de texto e interfaz con nuevos estilos de scroll, sombras y contenedores más claros.
+- **Animación de Texto**: Implementación de efecto de tipado en los textos narrativos usando `anime.js`.
+- **Notificaciones Interactivas**: Incorporación de `SweetAlert2` para mostrar mensajes personalizados en eventos clave (derrotas, reinicios, finalizaciones).
+- **Exportación de Historia**: Al finalizar la partida, se le ofrece al jugador la opción de descargar toda la historia vivida en un archivo `.txt`.
+- **Obtención Asíncrona de Misiones**: Implementación de una función `fetch` para simular la carga de misiones desde un servidor externo.
+- **Preparación para Modularización**: Se agregó un nuevo archivo `enemigos.js` para futuros desarrollos vinculados a la creación y gestión de enemigos.
+
+---
+
 ## Descripción General
 
 El juego inicia cuando el personaje despierta sin recuerdos en la aldea del reino de **Aurora**, debiendo interactuar con aldeanos, un alcalde y el gremio de aventureros para descubrir su pasado. A su vez, puede cazar monstruos en las afueras y combatir en un sistema de **turnos**, donde cada clase posee habilidades especiales.
@@ -47,7 +60,13 @@ Si se rechaza al principio, se salta la historia y se va directamente a cazar mo
   - **Sistema de Combate**: Incluye la función `peleaPorTurnos` con opciones de ataque, uso de pociones, habilidades y escape.  
   - **LocalStorage**: Para persistir datos (`player`) entre recargas.  
   - **Kit de Bienvenida**: Solo se agrega la primera vez.  
-  - **Habilidades**: Cada clase tiene su menú de habilidades especiales.
+  - **Habilidades**: Cada clase tiene su menú de habilidades especiales.  
+  - **Efectos visuales**: Animación del texto narrativo con `anime.js`.  
+  - **Notificaciones**: Diálogos y alertas con `SweetAlert2`.  
+  - **Exportación**: Función para guardar toda la historia en un archivo `.txt`.
+
+- **enemigos.js**  
+  Archivo independiente para futuras expansiones del sistema de enemigos.
 
 - **README.md**  
   Explica el objetivo del proyecto, su estructura, instrucciones de ejecución y últimas novedades.
