@@ -227,7 +227,12 @@ function cargarDatos(key) {
     const data = localStorage.getItem(key);
     return data ? JSON.parse(data) : null;
   } catch (error) {
-    console.error("Error al cargar datos:", error);
+    Swal.fire({
+      title: 'Error al cargar datos',
+      text: 'Hubo un problema al leer los datos del almacenamiento local.',
+      icon: 'error',
+      confirmButtonText: 'Aceptar'
+    });
     return null;
   }
 }
@@ -1125,7 +1130,12 @@ async function obtenerDetalleMision() {
     const data = await response.json();
     return data.title; // Se usa el título del post como detalle de misión.
   } catch (error) {
-    console.error("Error en fetch de misión:", error);
+    await Swal.fire({
+      title: 'Error al obtener misión',
+      text: 'No se pudo cargar el detalle de la misión.',
+      icon: 'error',
+      confirmButtonText: 'Aceptar'
+    });
     return "Detalle de misión no disponible.";
   }
 }
