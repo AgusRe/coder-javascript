@@ -1,0 +1,74 @@
+[
+    {
+      "id": 1,
+      "nombre": "Slime",
+      "tipo": "Monstruo",
+      "clase": "Slime",
+      "dificultad": 1,
+      "habilidades": [],
+      "pv": 50
+    },
+    {
+      "id": 2,
+      "nombre": "Lobo",
+      "tipo": "Monstruo",
+      "clase": "Lobo",
+      "dificultad": 2,
+      "habilidades": [],
+      "pv": 70
+    },
+    {
+      "id": 3,
+      "nombre": "Hada Maligna",
+      "tipo": "Monstruo",
+      "clase": "Hada Maligna",
+      "dificultad": 3,
+      "habilidades": [],
+      "pv": 80
+    },
+    {
+      "id": 4,
+      "nombre": "Orco",
+      "tipo": "Monstruo",
+      "clase": "Orco",
+      "dificultad": 5,
+      "habilidades": [],
+      "pv": 150
+    },
+    {
+      "id": 5,
+      "nombre": "Zombi",
+      "tipo": "Monstruo",
+      "clase": "Zombi",
+      "dificultad": 4,
+      "habilidades": [],
+      "pv": 140
+    },
+    {
+      "id": 6,
+      "nombre": "Esqueleto",
+      "tipo": "Monstruo",
+      "clase": "Esqueleto",
+      "dificultad": 6,
+      "habilidades": [],
+      "pv": 160
+    },
+    {
+      "id": 7,
+      "nombre": "Gigante",
+      "tipo": "Monstruo",
+      "clase": "Gigante",
+      "dificultad": 7,
+      "habilidades": [],
+      "pv": 170
+    },
+    {
+      "id": 8,
+      "nombre": "Dragón",
+      "tipo": "Monstruo",
+      "clase": "Dragón",
+      "dificultad": 10,
+      "habilidades": [],
+      "pv": 200
+    }
+]

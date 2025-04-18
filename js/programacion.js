@@ -405,17 +405,6 @@ function enteroRandom(min, max) {
 }
 
 /**
- * Crea los enemigos iniciales de la historia.
- */
-function crearEnemigosHistoria() {
-  const enemigo1 = new Enemigo("Slime", "Monstruo", "Slime", 1, [], 50);
-  const enemigo2 = new Enemigo("Lobo", "Monstruo", "Lobo", 2, [], 70);
-  const enemigo3 = new Enemigo("Hada Maligna", "Monstruo", "Hada", 3, [], 80);
-
-  enemigos.push(enemigo1, enemigo2, enemigo3);
-}
-
-/**
  * Función que maneja la pelea por turnos entre el jugador y un enemigo.
  * Se utiliza setTimeout para evitar recursión profunda.
  * @param {Enemigo} enemigo - Enemigo a combatir.
@@ -447,7 +436,7 @@ function peleaPorTurnos(enemigo, volverHandler) {
           return;
         }
 
-        const dmgEnemigo = 5 + enteroRandom(0, enemigo.dificultad * 3);
+        const dmgEnemigo = calcularDmgEnemigo(enemigo);
         player.pv -= dmgEnemigo;
         actualizarHistoria(`El ${enemigo.nombre} ataca y te inflige ${dmgEnemigo} de daño.<br>Tu PV: ${Math.max(player.pv, 0)}`);
         if (player.pv <= 0) {
@@ -490,7 +479,7 @@ function peleaPorTurnos(enemigo, volverHandler) {
         }
         guardarDatos("player", player);
 
-        const dmgEnemigo = 5 + enteroRandom(0, enemigo.dificultad * 2);
+        const dmgEnemigo = calcularDmgEnemigo(enemigo);
         player.pv -= dmgEnemigo;
         actualizarHistoria(`Mientras tomabas la poción, ${enemigo.nombre} te ataca por ${dmgEnemigo} de daño.<br>Tu PV: ${Math.max(player.pv, 0)}`);
 
@@ -524,7 +513,7 @@ function peleaPorTurnos(enemigo, volverHandler) {
             mostrarOpciones([{ label: "Continuar", handler: volverHandler }]);
             return;
           }
-          const dmgEnemigo = 5 + enteroRandom(0, enemigo.dificultad * 2);
+          const dmgEnemigo = calcularDmgEnemigo(enemigo);
           player.pv -= dmgEnemigo;
           actualizarHistoria(`El ${enemigo.nombre} aprovecha y te ataca por ${dmgEnemigo} de daño.<br>Tu PV: ${Math.max(player.pv, 0)}`);
           if (player.pv <= 0) {
@@ -556,17 +545,63 @@ function peleaPorTurnos(enemigo, volverHandler) {
 }
 
 /**
- * Crea un enemigo aleatorio y lo agrega al array de enemigos.
+ * Calcula el daño que inflige un enemigo según su dificultad.
+ * Puedes ajustar los coeficientes para equilibrar la curva de dificultad.
+ * @param {Enemigo} enemigo        — Instancia del enemigo
+ * @param {number} variacionPct    — Variación máxima porcentual (0–1) sobre el daño base
+ * @returns {number}               — Daño final redondeado al entero
  */
-function crearEnemigoRandom() {
-  const nombres = ["Orco", "Zombi", "Esqueleto", "Gigante", "Dragón"];
-  const index = enteroRandom(0, nombres.length);
-  const nombre = nombres[index];
-  const dificultad = 3 + enteroRandom(1, 5);
-  const pv = 100 + dificultad * 10;
+function calcularDmgEnemigo(enemigo, variacionPct = 0.3) {
+  // 1) Daño base proporcional a la dificultad
+  const dmgBase = enemigo.dificultad * 3;
+  // 2) Componente aleatorio: hasta ±variacionPct del dmgBase
+  const maxVariacion = Math.floor(dmgBase * variacionPct);
+  const variacion = enteroRandom(-maxVariacion, maxVariacion + 1);
+  // 3) Bonus fijo de margen de error
+  const bonusFijo = 5;
 
-  const enemigo = new Enemigo(nombre, "Monstruo", nombre, dificultad, [], pv);
-  enemigos.push(enemigo);
+  const total = dmgBase + variacion + bonusFijo;
+  // Asegurarse de que al menos haga 1 de daño
+  return Math.max(1, total);
+}
+
+/**
+ * Carga los enemigos de la historia principal desde un archivo JSON.
+ * Solo se ejecuta una vez al inicio de la aventura.
+ * @returns {Promise<void>}
+ */
+async function crearEnemigosHistoria() {
+  // Si ya fueron creados, no se vuelven a cargar
+  if (enemigos.length > 0) return;
+
+  // Cargar todos los enemigos desde el JSON
+  const todos = await cargarEnemigosJSON();
+
+  // Filtrar solo los tres enemigos de la historia principal
+  enemigos = todos.filter(e =>
+    ["Slime", "Lobo", "Hada Maligna"].includes(e.nombre)
+  );
+}
+
+/**
+ * Carga enemigos adicionales desde el JSON y agrega uno aleatorio al array de enemigos.
+ * Se utiliza una vez que se derrotaron los tres enemigos de la historia principal.
+ * @returns {Promise<void>}
+ */
+async function crearEnemigoRandom() {
+  const todos = await cargarEnemigosJSON();
+
+  // Filtrar enemigos que no son los tres principales
+  const pool = todos.filter(e =>
+    !["Slime", "Lobo", "Hada Maligna"].includes(e.nombre)
+  );
+
+  if (pool.length === 0) return;
+
+  // Seleccionar uno aleatorio y agregarlo al array de enemigos
+  const idx = enteroRandom(0, pool.length);
+  const elegido = pool[idx];
+  enemigos.push(elegido);
 }
 
 /*******************************************
@@ -745,10 +780,11 @@ function agregarKitbienvenida() {
 /**
  * Muestra las opciones de cazar monstruos y administra el flujo de combate.
  */
-function textoMonstruos() {
+async function textoMonstruos() {
   actualizarHistoria("Como decidiste cazar monstruos, el gremio te otorgó un kit de bienvenida.", false);
   agregarKitbienvenida();
   actualizarStats();
+  await crearEnemigosHistoria();
   mostrarOpciones([
     { label: "Mostrar Inventario", handler: () => mostrarInventario(() => textoMonstruos()) },
     { label: "Ir a la caza de monstruos", handler: () => cazarMonstruos() }
@@ -758,12 +794,9 @@ function textoMonstruos() {
 /**
  * Inicia la caza de monstruos, creando enemigos si es necesario y llamando al combate.
  */
-function cazarMonstruos() {
+async function cazarMonstruos() {
   if (enemigos.length === 0) {
-    crearEnemigosHistoria();
-  }
-  if (enemigos.length === 0) {
-    crearEnemigoRandom();
+    await crearEnemigoRandom();
   }
   const enemigoActual = enemigos[0];
   if (!enemigoActual) {
@@ -794,9 +827,10 @@ function cazarMonstruos() {
 }
 
 /**
- * Simula ir al gremio de aventureros y mostrar una misión aleatoria en la recepcionista.
+ * Simula ir al gremio de aventureros y muestra una misión aleatoria
+ * cargada desde js/misiones.js con control de errores.
  */
-function irAlGremio() {
+async function irAlGremio() {
   actualizarHistoria(
     "Vas al gremio de aventureros siguiendo el mapa que te dio el Alcalde.<br>" +
     "Dentro, el ambiente se llena de murmullos de guerreros, magos y aventureros de todo tipo..."
@@ -804,8 +838,10 @@ function irAlGremio() {
   player.puntaje += 5;
   guardarDatos("player", player);
 
-  // Obtenemos una misión aleatoria desde misiones.js
-  const mision = obtenerMision();
+  // Carga del módulo misiones.js
+  const mod = await importConControl('./misiones.js');
+  if (!mod) return; // Si hubo error muestra con SweetAlert
+  const mision = mod.obtenerMision();
 
   mostrarOpciones([
     {
@@ -1091,6 +1127,48 @@ async function obtenerDetalleMision() {
   } catch (error) {
     console.error("Error en fetch de misión:", error);
     return "Detalle de misión no disponible.";
+  }
+}
+
+/**
+ * Importa dinámicamente un módulo y devuelve su objeto.
+ * Muestra SweetAlert2 si hay algun error.
+ * @param {string} path — Ruta al módulo.
+ * @returns {Promise<Module|null>}
+ */
+async function importConControl(path) {
+  try {
+    return await import(path);
+  } catch (err) {
+    Swal.fire({
+      title: 'Error al cargar módulo',
+      text: err.message,
+      icon: 'error',
+      confirmButtonText: 'Cerrar'
+    });
+    return null;
+  }
+}
+
+/**
+ * Carga el JSON de enemigos y devuelve las instancias de Enemigo.
+ * Muestra SweetAlert2 si hay algun error.
+ */
+async function cargarEnemigosJSON() {
+  try {
+    const res = await fetch("js/enemigos.json");
+    if (!res.ok) throw new Error(`HTTP ${res.status} – ${res.statusText}`);
+    const lista = await res.json();
+    return lista.map(e =>
+      new Enemigo(e.nombre, e.tipo, e.clase, e.dificultad, e.habilidades, e.pv)
+    );
+  } catch (err) {
+    Swal.fire({
+      title: 'Error al cargar enemigos',
+      text: err.message,
+      icon: 'error'
+    });
+    return [];
   }
 }
 
