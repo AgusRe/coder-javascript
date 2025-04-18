@@ -7,13 +7,13 @@ Este proyecto se desarrolla como parte de la cursada de JavaScript en [Coderhous
 3. **Explora** diferentes rutas narrativas en un mundo de fantasía.  
 4. **Participa** en combates por turnos contra diversos enemigos.
 
-Con el tiempo, se agregaron y se van a seguir añadiendo mejoras al **sistema de combate**, la **lógica de vida limitada** (PV base + 5), la **creación progresiva de enemigos**, y ahora un **menú de habilidades** según la clase.
+Con el tiempo, se han agregado y se seguirán añadiendo mejoras al **sistema de combate**, la **lógica de vida limitada** (PV base + 5), la **creación progresiva de enemigos**, y ahora un **menú de habilidades** según la clase.
 
 ---
 
-## 🆕 Novedades del Último Commit 'Grande'
+## 🆕 Novedades de los Últimos Commits
 
-🔗 [Ver commit 3f592e4](https://github.com/AgusRe/coder-javascript/commit/3f592e49c301478a993deb23cb1644641b2b00f4)
+### 🔗 [Ver commit 3f592e4](https://github.com/AgusRe/coder-javascript/commit/3f592e49c301478a993deb23cb1644641b2b00f4)
 
 - **Refactorización de Estilos**: Unificación de fuentes y mejora de la visualización de texto e interfaz con nuevos estilos de scroll, sombras y contenedores más claros.
 - **Animación de Texto**: Implementación de efecto de tipado en los textos narrativos usando `anime.js`.
@@ -21,6 +21,11 @@ Con el tiempo, se agregaron y se van a seguir añadiendo mejoras al **sistema de
 - **Exportación de Historia**: Al finalizar la partida, se le ofrece al jugador la opción de descargar toda la historia vivida en un archivo `.txt`.
 - **Obtención Asíncrona de Misiones**: Implementación de una función `fetch` para simular la carga de misiones desde un servidor externo.
 - **Preparación para Modularización**: Se agregó un nuevo archivo `enemigos.js` para futuros desarrollos vinculados a la creación y gestión de enemigos.
+
+### 🔗 [Últimos cambios relevantes]
+
+- **Corrección de bucle infinito en combates**: Se solucionó un error donde los enemigos iniciales se repetían indefinidamente. Ahora, una vez derrotados los enemigos de la historia principal, se generan enemigos aleatorios correctamente.
+- **Escalado de daño según dificultad**: Se implementó una nueva función `calcularDmgEnemigo()` que ajusta dinámicamente el daño de los enemigos según su nivel de dificultad, haciendo que los combates sean más desafiantes en etapas avanzadas.
 
 ---
 
@@ -65,8 +70,11 @@ Si se rechaza al principio, se salta la historia y se va directamente a cazar mo
   - **Notificaciones**: Diálogos y alertas con `SweetAlert2`.  
   - **Exportación**: Función para guardar toda la historia en un archivo `.txt`.
 
-- **enemigos.js**  
-  Archivo independiente para futuras expansiones del sistema de enemigos.
+- **enemigos.js / enemigos.json**  
+  Archivo independiente con estructura para gestionar enemigos de la historia y generar enemigos aleatorios según dificultad.
+
+- **misiones.js**  
+  Contiene una lista de misiones disponibles para mostrar en el gremio.
 
 - **README.md**  
   Explica el objetivo del proyecto, su estructura, instrucciones de ejecución y últimas novedades.
@@ -76,10 +84,10 @@ Si se rechaza al principio, se salta la historia y se va directamente a cazar mo
 ## Cómo Ejecutar el Proyecto
 
 1. **Clonar o descargar** este repositorio.  
-2. **Abrir** `index.html` en un navegador.  
+2. **Abrir** `index.html` desde un servidor local (ej. Live Server en VS Code).  
 3. **Seguir** las instrucciones en pantalla, usando los botones para interactuar con la historia y el combate.
 
-> **Nota**: La experiencia se basa en **eventos del DOM** y se apoya en **LocalStorage** para guardar el progreso.
+> **Nota**: La experiencia se basa en **eventos del DOM**, y para que `fetch` funcione correctamente, el proyecto debe abrirse desde un entorno con servidor local.
 
 ---
 
